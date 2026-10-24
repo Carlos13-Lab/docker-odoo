@@ -16,4 +16,3 @@
 ## Lo que escribí yo sin IA
 - Probé la migración en mi entorno Docker (9/9 pruebas y luego 35/35 con los cuatro módulos).
 - Revisé el diff de cada commit y abrí y mergeé el PR.
-- (completar con lo que hayas revisado o cambiado tú)

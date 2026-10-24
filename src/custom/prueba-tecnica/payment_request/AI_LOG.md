@@ -16,4 +16,3 @@
 
 ## Lo que escribí yo sin IA
 - Probé el módulo en mi Docker (12/12 pruebas y 35/35 con los cuatro módulos).
-- (completar: preguntas al cliente que agregaste o cambiaste, prueba manual con tres usuarios si la hiciste)
