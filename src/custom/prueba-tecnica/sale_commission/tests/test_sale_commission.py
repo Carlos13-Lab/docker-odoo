@@ -12,7 +12,11 @@ class TestSaleCommission(TransactionCase):
             name="Vendedor de prueba",
         )
         cls.salesman.commission_percent = 5.0
-        cls.env.user.commission_percent = 5.0
+        cls.manager = new_test_user(
+            cls.env, login="commission_manager", groups="sales_team.group_sale_manager",
+            name="Gerente de prueba",
+        )
+        cls.manager.commission_percent = 12.0
         cls.other_salesman = new_test_user(
             cls.env, login="commission_other_salesman", groups="sales_team.group_sale_salesman",
             name="Otro vendedor",
@@ -64,3 +68,21 @@ class TestSaleCommission(TransactionCase):
         order = self._create_order(self.salesman)
         order.action_confirm()
         self.assertEqual(order.order_line.commission_percent, 10.0)
+
+    def test_salesman_can_confirm_own_order(self):
+        """T-200: un vendedor (sin permisos de gerente) confirma su propio pedido."""
+        order = self.env["sale.order"].with_user(self.salesman).create({
+            "partner_id": self.partner.id,
+            "user_id": self.salesman.id,
+            "order_line": [(0, 0, {"product_id": self.product.id, "product_uom_qty": 2})],
+        })
+        order.action_confirm()
+        self.assertEqual(order.state, "sale")
+        self.assertEqual(order.order_line.commission_percent, 5.0)
+
+    def test_manager_confirms_for_salesman(self):
+        """T-200: si el gerente confirma por un vendedor, la comisión sigue siendo del vendedor."""
+        order = self._create_order(self.salesman)
+        order.with_user(self.manager).action_confirm()
+        self.assertEqual(order.order_line.commission_percent, 5.0)
+        self.assertAlmostEqual(order.order_line.commission_amount, 10.0)
