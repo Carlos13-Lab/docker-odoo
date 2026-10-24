@@ -33,3 +33,31 @@ Esta carpeta es el directorio de addons de la prueba. Aquí van **todos los mód
 3. Corre las pruebas: `./odoo test prueba-tecnica sale_commission` (varios módulos separados por coma).
 
 Más detalles del CLI en el `readme.md` de la raíz del repositorio.
+
+---
+
+# Entrega — Carlos Díaz
+
+**Versión de Odoo: 18.0** (instancia `prueba-tecnica` en `instances.json`, Postgres 16).
+
+Comando de pruebas de la entrega (base nueva):
+`./odoo test prueba-tecnica shop_integration_api,fleet_inspection,sale_commission,payment_request`
+
+| Ejercicio | Módulo | A | B | C | Documentación |
+|---|---|---|---|---|---|
+| 1. API para tienda en línea | `shop_integration_api` | ✅ | ⏳ | ⏳ | `shop_integration_api/README.md` |
+| 2. Migración de inspecciones | `fleet_inspection` | ✅ | ⏳ | ⏳ | `fleet_inspection/README.md` (tabla de cambios) |
+| 3. Ticket urgente T-200 | `sale_commission` | ✅ | ✅ | ✅ | `sale_commission/INCIDENT.md` |
+| 4. Solicitudes de pago | `payment_request` | ✅ | ⏳ | ⏳ | `payment_request/README.md` (supuestos y preguntas al cliente) |
+
+Cada módulo tiene su `README.md` (tramos, cómo probarlo, supuestos y limitaciones) y su `AI_LOG.md`.
+
+## Problemas conocidos del entorno
+
+- `instances.example.json` apunta al perfil `postgresql.conf`, que no existe en `.resources/dbconfigs/`:
+  Postgres no arranca. Usar `postgresql.small.conf`.
+- `./odoo test` ejecuta Odoo como root dentro del contenedor y deja carpetas del filestore que el
+  usuario `odoo` no puede escribir (`Permission denied: /home/odoo/data/filestore/...`). Después de
+  correr las pruebas: `docker compose -f docker-compose.generated.yml exec -u root odoo-prueba-tecnica chown -R odoo:odoo /home/odoo/data`.
+- Crear bases desde la terminal (`odoo -d <base> -i ... --stop-after-init`) es más fiable que desde el
+  gestor web.

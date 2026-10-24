@@ -1,6 +1,7 @@
 {
     "name": "Inspecciones de vehículos",
     "summary": "Checklist de inspección para los vehículos de la flota",
+    "description": "Inspecciones de vehículos con checklist. Documentación en README.md.",
     "version": "18.0.1.0.0",
     "category": "Human Resources/Fleet",
     "author": "Binaural",
