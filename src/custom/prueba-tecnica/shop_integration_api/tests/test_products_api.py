@@ -108,4 +108,5 @@ class TestProductsApi(HttpCase):
     def test_requires_login(self):
         self.logout()
         response = self.url_open("/api/v1/products", allow_redirects=False)
-        self.assertNotEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 303)
+        self.assertIn("/web/login", response.headers["Location"])
