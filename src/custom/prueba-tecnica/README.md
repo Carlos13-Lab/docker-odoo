@@ -48,7 +48,7 @@ Comando de pruebas de la entrega (base nueva):
 | 1. API para tienda en línea | `shop_integration_api` | ✅ | ⏳ | ⏳ | `shop_integration_api/README.md` |
 | 2. Migración de inspecciones | `fleet_inspection` | ✅ | ⏳ | ⏳ | `fleet_inspection/README.md` (tabla de cambios) |
 | 3. Ticket urgente T-200 | `sale_commission` | ✅ | ✅ | ✅ | `sale_commission/INCIDENT.md` |
-| 4. Solicitudes de pago | `payment_request` | ✅ | ⏳ | ⏳ | `payment_request/README.md` (supuestos y preguntas al cliente) |
+| 4. Solicitudes de pago | `payment_request` | ✅ | ✅ | ⏳ | `payment_request/README.md` (supuestos y preguntas al cliente) |
 
 Cada módulo tiene su `README.md` (tramos, cómo probarlo, supuestos y limitaciones) y su `AI_LOG.md`.
 

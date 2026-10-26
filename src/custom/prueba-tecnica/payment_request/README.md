@@ -7,17 +7,35 @@ de Distribuidora Andina C.A. (ficticia).
 
 | Tramo | Estado |
 |---|---|
-| A — Modelo, flujo, grupos, vistas y pruebas | ✅ 12/12 pruebas en verde |
-| B — Niveles de aprobación, wizards de rechazo y pago, PDF | ⏳ Pendiente |
+| A — Modelo, flujo, grupos, vistas y pruebas | ✅ |
+| B — Niveles de aprobación, wizards de rechazo y pago, PDF | ✅ 20/20 pruebas (A y B) en verde |
 | C — USD/VES, multi-compañía, concurrencia, ARCHITECTURE.md | ⏳ Pendiente |
 
-## Cómo funciona (tramo A)
+## Cómo funciona
 
 1. **Cualquier empleado con el grupo *Solicitante*** crea una solicitud: proveedor, monto, moneda,
    fecha y concepto. El número sale de la secuencia `SP/2026/0001` y el solicitante es el usuario actual.
-2. **Enviar** → la solicitud queda bloqueada: ya no se pueden cambiar sus datos ni borrarla.
-3. **Aprobador**: *Aprobar* o *Rechazar* las solicitudes enviadas.
-4. **Tesorería**: *Registrar pago* de las aprobadas.
+2. **Enviar** → la solicitud queda bloqueada (ya no se pueden cambiar sus datos ni borrarla), se le
+   asigna el aprobador según el monto y se le crea una actividad a ese aprobador.
+3. **Aprobador asignado**: *Aprobar*, o *Rechazar* con un motivo obligatorio que queda en el chatter y
+   le llega al solicitante. Se guarda quién aprobó y cuándo.
+4. **Tesorería**: *Registrar pago* elige el diario y crea el pago a proveedor (`account.payment`)
+   publicado y vinculado a la solicitud (botón *Pago* en el formulario).
+5. **Imprimir**: reporte PDF de la solicitud con quién aprobó, cuándo y el pago.
+
+### Niveles de aprobación (tramo B)
+
+*Solicitudes de pago › Configuración › Niveles de aprobación* (administradores). Cada nivel tiene un
+monto mínimo y un aprobador. Al enviar, se asigna el nivel con el **mayor monto mínimo que no supere el
+monto** de la solicitud, convertido a la moneda de la compañía. Ejemplo:
+
+| Nivel | Desde | Aprobador |
+|---|---|---|
+| Jefe de área | 0 | Jefe de compras |
+| Gerencia | 5.000 | Gerente de administración |
+
+Una solicitud de 1.200 la aprueba el jefe de compras; una de 7.800, gerencia. Si no hay ningún nivel
+configurado, no se puede enviar y el mensaje dice dónde configurarlo.
 
 Estados: Borrador → Enviada → Aprobada → Pagada, o Rechazada. Cada cambio de estado queda en el chatter.
 
@@ -36,6 +54,10 @@ Las reglas no dependen solo de ocultar botones: se validan en el servidor.
 - **Ver solicitudes ajenas:** regla de registro `requester_id = usuario` para el solicitante.
 - **Aprobar, rechazar o pagar sin el grupo:** cada método verifica el grupo con `has_group()` y lanza
   `AccessError`, aunque se llame directamente por RPC.
+- **Aprobar una solicitud asignada a otro aprobador:** solo el aprobador asignado puede aprobar o
+  rechazar (`AccessError` para cualquier otro, aunque sea Aprobador).
+- **Pagar dos veces:** el pago exige estado *Aprobada* y que no haya pago vinculado; además, una
+  restricción `unique(payment_id)` en la base de datos.
 - **Saltarse el flujo con `write({'state': ...})` o creando la solicitud ya aprobada:** `write()` y
   `create()` rechazan cambios de estado. Los métodos del flujo, después de validar grupo y estado,
   escriben el estado con `sudo()`: es el único uso de `sudo()` del módulo y está limitado a ese campo.
@@ -73,9 +95,16 @@ Preguntas que le haría a Carolina, y lo que asumí para avanzar sin su respuest
 | ¿Hace falta adjuntar soportes (factura, presupuesto)? | Se adjuntan desde el chatter; no es obligatorio. |
 | ¿Trabajan con varias empresas en el mismo Odoo? | Tramo A: una compañía. Tramo C agrega reglas por compañía. |
 
-## Limitaciones conocidas (tramo A)
+## Limitaciones conocidas
 
-- *Registrar pago* solo cambia el estado: el registro contable (`account.payment`) llega en el tramo B.
-- Rechazar no pide motivo todavía: el wizard con motivo obligatorio es del tramo B.
-- El aprobador puede aprobar sus propias solicitudes. No se pidió separarlo; se puede agregar si
-  Carolina lo confirma.
+- **Tesorería incluye el grupo de facturación de Contabilidad** (`account.group_account_invoice`):
+  es el permiso mínimo de Odoo para crear pagos. Así Tesorería crea el pago con sus propios permisos,
+  sin `sudo()`.
+- Los usuarios necesitan un **correo electrónico** configurado: en Odoo, un usuario sin correo no
+  puede publicar en el chatter (por ejemplo, el motivo del rechazo).
+- El pago se registra en la **moneda de la solicitud**. Pagar en bolívares una solicitud en dólares es
+  el tramo C.
+- Un aprobador puede aprobar sus propias solicitudes si el nivel le corresponde. No se pidió
+  separarlo; se puede agregar si Carolina lo confirma.
+- Si el aprobador asignado no está disponible, hoy hay que cambiar el nivel y crear la solicitud de
+  nuevo. Una reasignación queda como mejora.
